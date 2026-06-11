@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>VoltComms</AssemblyName>
+    <RootNamespace>VoltComms</RootNamespace>
+    <Version>0.1.0</Version>
+    <!-- 리눅스 CI/개발 환경에서도 컴파일 검증이 가능하도록 허용 -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- 단일 exe 배포: 자세한 옵션은 .github/workflows/build.yml 의 dotnet publish 참조 -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="Concentus" Version="2.2.2" />
+  </ItemGroup>
+
+</Project>

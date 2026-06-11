@@ -1,0 +1,80 @@
+name: build
+
+on:
+  push:
+    branches: ["main", "claude/**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  server:
+    name: 서버 (Go, linux-amd64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
+
+      - name: 빌드
+        working-directory: server
+        env:
+          CGO_ENABLED: "0"
+          GOOS: linux
+          GOARCH: amd64
+        run: |
+          go vet ./...
+          go build -trimpath -ldflags "-s -w -X main.version=${GITHUB_SHA::8}" -o ../dist/volt-server .
+
+      - name: 아티팩트 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: volt-server-linux-amd64
+          path: dist/volt-server
+          if-no-files-found: error
+
+  client:
+    name: 클라이언트 (Windows, 단일 exe)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: 단일 exe 퍼블리시
+        run: >
+          dotnet publish client/VoltComms/VoltComms.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -o dist
+
+      - name: 아티팩트 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: VoltComms-win-x64
+          path: dist/VoltComms.exe
+          if-no-files-found: error
+
+  # v* 태그를 푸시하면 두 바이너리를 GitHub Release 로 올린다.
+  release:
+    name: 릴리스 게시
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [server, client]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/volt-server-linux-amd64/volt-server
+            artifacts/VoltComms-win-x64/VoltComms.exe

@@ -1,0 +1,12 @@
+# .NET
+client/**/bin/
+client/**/obj/
+*.user
+
+# Go
+dist/
+volt-server
+
+# 런타임 산출물
+config.json
+logs/
