@@ -3,6 +3,9 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
 using VoltComms.Core;
+// UseWindowsForms 가 System.Drawing 을 암시적으로 가져와 충돌하므로 WPF 쪽으로 고정한다.
+using Brush = System.Windows.Media.Brush;
+using Color = System.Windows.Media.Color;
 
 namespace VoltComms;
 
