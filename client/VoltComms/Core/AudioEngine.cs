@@ -35,6 +35,9 @@ public sealed class AudioEngine : IDisposable
     /// <summary>송신 게이트. true 인 동안만 EncodedFrame 이 발생한다.</summary>
     public volatile bool Transmitting;
 
+    /// <summary>마이크 입력 레벨 0.0~1.0 (설정 화면 레벨 미터용, 항상 갱신).</summary>
+    public float MicLevel { get; private set; }
+
     /// <summary>인코딩된 20ms Opus 프레임 — 오디오 스레드에서 호출됨.</summary>
     public event Action<byte[], int>? EncodedFrame;
 
@@ -46,7 +49,7 @@ public sealed class AudioEngine : IDisposable
         _decoder = OpusCodecFactory.CreateDecoder(SampleRate, Channels);
     }
 
-    public void Start(string inputDeviceName, string outputDeviceName)
+    public void Start(string inputDeviceName, string outputDeviceName, int volumePercent = 100)
     {
         int inDev = FindInputDevice(inputDeviceName);
         int outDev = FindOutputDevice(outputDeviceName);
@@ -58,6 +61,7 @@ public sealed class AudioEngine : IDisposable
         };
         _waveOut = new WaveOutEvent { DeviceNumber = outDev, DesiredLatency = 100 };
         _waveOut.Init(_playBuf);
+        SetVolume(volumePercent);
         _waveOut.Play();
 
         _waveIn = new WaveInEvent
@@ -75,13 +79,24 @@ public sealed class AudioEngine : IDisposable
 
     private void OnMicData(object? sender, WaveInEventArgs e)
     {
+        int sampleCount = e.BytesRecorded / 2;
+
+        // 레벨 미터는 송신 여부와 무관하게 항상 갱신한다 (피크 + 감쇠).
+        int peak = 0;
+        for (int i = 0; i < sampleCount; i++)
+        {
+            int s = Math.Abs((short)(e.Buffer[i * 2] | (e.Buffer[i * 2 + 1] << 8)));
+            if (s > peak) peak = s;
+        }
+        float level = peak / 32768f;
+        MicLevel = Math.Max(level, MicLevel * 0.85f);
+
         if (!Transmitting)
         {
             _frameFill = 0; // 송신 중이 아니면 버린다.
             return;
         }
         // 16비트 샘플을 20ms(960샘플) 프레임으로 모아 인코딩한다.
-        int sampleCount = e.BytesRecorded / 2;
         for (int i = 0; i < sampleCount; i++)
         {
             _frame[_frameFill++] = (short)(e.Buffer[i * 2] | (e.Buffer[i * 2 + 1] << 8));
@@ -136,6 +151,30 @@ public sealed class AudioEngine : IDisposable
 
     /// <summary>발언권 획득 시: 짧은 확인음.</summary>
     public void GrantBeep() => AddTone(880, 70);
+
+    /// <summary>수신 음량 0~100%.</summary>
+    public void SetVolume(int percent)
+    {
+        if (_waveOut != null)
+            _waveOut.Volume = Math.Clamp(percent, 0, 100) / 100f;
+    }
+
+    /// <summary>설정 화면 드롭다운용 장치 목록.</summary>
+    public static List<string> InputDeviceNames()
+    {
+        var list = new List<string>();
+        for (int i = 0; i < WaveInEvent.DeviceCount; i++)
+            list.Add(WaveInEvent.GetCapabilities(i).ProductName);
+        return list;
+    }
+
+    public static List<string> OutputDeviceNames()
+    {
+        var list = new List<string>();
+        for (int i = 0; i < WaveOut.DeviceCount; i++)
+            list.Add(WaveOut.GetCapabilities(i).ProductName);
+        return list;
+    }
 
     private void AddTone(double freq, int ms, double amplitude = 0.22)
     {

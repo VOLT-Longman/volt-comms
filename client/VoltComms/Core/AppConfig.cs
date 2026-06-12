@@ -16,8 +16,8 @@ public class AppConfig
     /// <summary>서버가 TLS(wss)로 떠 있으면 true. 평문 테스트면 false.</summary>
     [JsonPropertyName("use_tls")] public bool UseTls { get; set; } = false;
 
-    [JsonPropertyName("token")] public string Token { get; set; } = "토큰을-여기에-입력";
-    [JsonPropertyName("nickname")] public string Nickname { get; set; } = "콜사인";
+    [JsonPropertyName("token")] public string Token { get; set; } = "";
+    [JsonPropertyName("nickname")] public string Nickname { get; set; } = "";
 
     /// <summary>
     /// PTT 키. 키보드: "F13", "Scroll", "Pause" 등 (.NET Keys 이름).
@@ -35,6 +35,12 @@ public class AppConfig
     [JsonPropertyName("grant_beep")] public bool GrantBeep { get; set; } = true;
 
     [JsonPropertyName("always_on_top")] public bool AlwaysOnTop { get; set; } = true;
+
+    /// <summary>수신 음량 (0~100).</summary>
+    [JsonPropertyName("output_volume")] public int OutputVolume { get; set; } = 100;
+
+    /// <summary>실행 시 창을 띄우지 않고 트레이로 시작.</summary>
+    [JsonPropertyName("start_minimized")] public bool StartMinimized { get; set; } = false;
 
     public static string BaseDir =>
         Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
@@ -63,7 +69,10 @@ public class AppConfig
         return def;
     }
 
+    public void Save() =>
+        File.WriteAllText(ConfigPath, JsonSerializer.Serialize(this, JsonOpts));
+
     /// <summary>실사용 가능한 설정인지 (토큰/닉네임을 채웠는지) 검사한다.</summary>
     public bool LooksConfigured =>
-        Token != "토큰을-여기에-입력" && !string.IsNullOrWhiteSpace(Token);
+        !string.IsNullOrWhiteSpace(Token) && !string.IsNullOrWhiteSpace(Nickname);
 }

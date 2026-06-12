@@ -21,6 +21,8 @@ public sealed class PttHook : IDisposable
     private const int WM_KEYUP = 0x0101;
     private const int WM_SYSKEYDOWN = 0x0104;
     private const int WM_SYSKEYUP = 0x0105;
+    private const int WM_MBUTTONDOWN = 0x0207;
+    private const int WM_MBUTTONUP = 0x0208;
     private const int WM_XBUTTONDOWN = 0x020B;
     private const int WM_XBUTTONUP = 0x020C;
 
@@ -66,7 +68,7 @@ public sealed class PttHook : IDisposable
     private IntPtr _mouseHook = IntPtr.Zero;
 
     private readonly int _vk;          // 키보드 모드일 때 가상 키 코드 (0이면 마우스 모드)
-    private readonly int _xButton;     // 마우스 모드일 때 1=XButton1, 2=XButton2
+    private readonly int _mouseButton; // 마우스 모드: 1=XButton1, 2=XButton2, 3=휠클릭
     private bool _isDown;
 
     /// <summary>설정 문자열을 사람이 읽을 이름으로 정규화한 값.</summary>
@@ -75,6 +77,16 @@ public sealed class PttHook : IDisposable
     public event Action? PttDown;
     public event Action? PttUp;
 
+    /// <summary>설정 문자열을 화면에 보여줄 한국어 라벨로 바꾼다 (설정 UI에서 사용).</summary>
+    public static string LabelFor(string keyName) =>
+        keyName.Trim().ToLowerInvariant() switch
+        {
+            "xbutton1" or "mouse4" => "마우스4 (뒤로 가기 버튼)",
+            "xbutton2" or "mouse5" => "마우스5 (앞으로 가기 버튼)",
+            "mbutton" or "mouse3" => "마우스 휠 클릭",
+            _ => keyName.Trim(),
+        };
+
     /// <exception cref="ArgumentException">키 이름을 해석할 수 없을 때.</exception>
     public PttHook(string keyName)
     {
@@ -82,27 +94,28 @@ public sealed class PttHook : IDisposable
         _mouseProc = MouseProc;
 
         var name = keyName.Trim();
+        KeyLabel = LabelFor(name);
         switch (name.ToLowerInvariant())
         {
             case "xbutton1" or "mouse4":
-                _xButton = 1;
-                KeyLabel = "마우스4 (XButton1)";
+                _mouseButton = 1;
                 return;
             case "xbutton2" or "mouse5":
-                _xButton = 2;
-                KeyLabel = "마우스5 (XButton2)";
+                _mouseButton = 2;
+                return;
+            case "mbutton" or "mouse3":
+                _mouseButton = 3;
                 return;
         }
         if (!Enum.TryParse<Keys>(name, ignoreCase: true, out var key) || key == Keys.None)
             throw new ArgumentException($"PTT 키 이름을 해석할 수 없습니다: \"{keyName}\"");
         _vk = (int)key;
-        KeyLabel = key.ToString();
     }
 
     public void Install()
     {
         var hMod = GetModuleHandle(null);
-        if (_xButton != 0)
+        if (_mouseButton != 0)
         {
             _mouseHook = SetWindowsHookEx(WH_MOUSE_LL, _mouseProc, hMod, 0);
             if (_mouseHook == IntPtr.Zero)
@@ -136,11 +149,16 @@ public sealed class PttHook : IDisposable
         if (nCode >= 0)
         {
             int msg = wParam.ToInt32();
-            if (msg is WM_XBUTTONDOWN or WM_XBUTTONUP)
+            if (_mouseButton == 3)
+            {
+                if (msg == WM_MBUTTONDOWN) FireDown();
+                else if (msg == WM_MBUTTONUP) FireUp();
+            }
+            else if (msg is WM_XBUTTONDOWN or WM_XBUTTONUP)
             {
                 var info = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
                 int button = (int)(info.mouseData >> 16); // HIWORD: 1=XButton1, 2=XButton2
-                if (button == _xButton)
+                if (button == _mouseButton)
                 {
                     if (msg == WM_XBUTTONDOWN) FireDown();
                     else FireUp();

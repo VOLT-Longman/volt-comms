@@ -4,4 +4,86 @@
              ShutdownMode="OnExplicitShutdown"
              Startup="OnAppStartup"
              Exit="OnAppExit">
+    <Application.Resources>
+        <!-- 공용 다크 테마 팔레트 -->
+        <SolidColorBrush x:Key="BgWindow" Color="#FF11151A"/>
+        <SolidColorBrush x:Key="BgPanel" Color="#FF1A222C"/>
+        <SolidColorBrush x:Key="BgControl" Color="#FF222C38"/>
+        <SolidColorBrush x:Key="FgMain" Color="#FFD7E1EA"/>
+        <SolidColorBrush x:Key="FgDim" Color="#FF8A97A4"/>
+        <SolidColorBrush x:Key="FgFaint" Color="#FF5E6A76"/>
+        <SolidColorBrush x:Key="Accent" Color="#FFE8B931"/>
+        <SolidColorBrush x:Key="Ok" Color="#FF4CC96E"/>
+        <SolidColorBrush x:Key="Bad" Color="#FFFF5A5A"/>
+        <SolidColorBrush x:Key="BorderDim" Color="#FF313D4B"/>
+
+        <Style x:Key="VoltButton" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource FgMain}"/>
+            <Setter Property="Background" Value="{StaticResource BgControl}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderDim}"/>
+            <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#FF2C3845"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#FF4A5868"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#FF18202A"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{StaticResource FgFaint}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="VoltPrimaryButton" TargetType="Button" BasedOn="{StaticResource VoltButton}">
+            <Setter Property="Background" Value="#FF8A6D14"/>
+            <Setter Property="BorderBrush" Value="#FFB08C1F"/>
+            <Setter Property="Foreground" Value="#FFFFF4D6"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <Style x:Key="VoltTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource BgControl}"/>
+            <Setter Property="Foreground" Value="{StaticResource FgMain}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderDim}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource FgMain}"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="VoltCheckBox" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource FgMain}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource FgDim}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+        </Style>
+
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,14,0,6"/>
+        </Style>
+    </Application.Resources>
 </Application>
