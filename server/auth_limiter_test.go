@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestAuthLimiterBlocksAfterRepeatedFailures(t *testing.T) {
 	a := newAuthLimiter()
@@ -47,5 +50,27 @@ func TestAuthLimiterSuccessClearsFailures(t *testing.T) {
 		if !a.allow(addr) {
 			t.Fatalf("성공 후 재실패 %d회(임계치 미만)에서 조기 차단됨", i)
 		}
+	}
+}
+
+func TestAuthLimiterPrunesStaleRecords(t *testing.T) {
+	a := newAuthLimiter()
+	clock := time.Now()
+	a.now = func() time.Time { return clock }
+	a.lastSweep = clock
+
+	// 서로 다른 host가 한 번씩만 실패한다 (저속 분산 실패 시나리오).
+	for _, h := range []string{"203.0.113.1:1", "203.0.113.2:1", "203.0.113.3:1"} {
+		a.recordFailure(h)
+	}
+	if got := len(a.records); got != 3 {
+		t.Fatalf("실패 직후 record 수 = %d, want 3", got)
+	}
+
+	// 시간 창과 스윕 간격을 넘긴 뒤 새 실패가 들어오면 stale entry가 정리돼야 한다.
+	clock = clock.Add(authBlockDuration + time.Minute)
+	a.recordFailure("198.51.100.9:1")
+	if got := len(a.records); got != 1 {
+		t.Fatalf("스윕 후 record 수 = %d, want 1 (새 host만 남아야 함)", got)
 	}
 }

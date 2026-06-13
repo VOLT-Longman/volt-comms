@@ -65,6 +65,8 @@ func (c *Client) sendRaw(data []byte) {
 		// 메시지를 버리는 대신 연결을 종료해 재접속·재동기화를 유도한다.
 		log.Printf("[송신] %s 송신 버퍼 포화 — 연결 종료로 재동기화 유도", c.conn.RemoteAddr())
 		c.close()
+		// 버퍼 드레이닝을 기다리지 않고 소켓을 즉시 끊어 느린 클라이언트를 떨군다.
+		c.conn.Close()
 	}
 }
 
