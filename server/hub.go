@@ -26,6 +26,7 @@ type Hub struct {
 	maxTalk   time.Duration
 	hbTimeout time.Duration
 	relay     *UDPRelay
+	authLimit *authLimiter
 
 	mu        sync.Mutex
 	clients   map[uint32]*Client
@@ -40,6 +41,7 @@ func NewHub(token string, udpPort int, maxTalk, hbTimeout time.Duration) *Hub {
 		udpPort:   udpPort,
 		maxTalk:   maxTalk,
 		hbTimeout: hbTimeout,
+		authLimit: newAuthLimiter(),
 		clients:   make(map[uint32]*Client),
 		nextID:    1,
 	}
@@ -47,6 +49,12 @@ func NewHub(token string, udpPort int, maxTalk, hbTimeout time.Duration) *Hub {
 
 // ServeWS 는 /ws 로 들어온 연결을 업그레이드하고 클라이언트 세션을 시작한다.
 func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
+	// 반복된 인증 실패로 차단된 주소는 WebSocket 업그레이드 전에 거부한다.
+	if !h.authLimit.allow(r.RemoteAddr) {
+		log.Printf("[인증 차단] %s — 반복된 인증 실패로 차단됨", r.RemoteAddr)
+		http.Error(w, "too many failed auth attempts", http.StatusTooManyRequests)
+		return
+	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("WS 업그레이드 실패 (%s): %v", r.RemoteAddr, err)

@@ -50,10 +50,21 @@ func (c *Client) sendMsg(m Msg) {
 }
 
 func (c *Client) sendRaw(data []byte) {
+	// 연결 종료가 진행 중이라 send 채널이 이미 닫혔다면, 채널 전송에서
+	// panic이 날 수 있다. 이를 흡수해 broadcast 루프 전체가 죽지 않게 한다.
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("[송신] %s 닫힌 채널로 전송 시도 무시: %v", c.conn.RemoteAddr(), r)
+		}
+	}()
 	select {
 	case c.send <- data:
 	default:
-		// 송신 버퍼가 가득 찬 비정상 클라이언트는 메시지를 버린다.
+		// 버퍼가 가득 찬 느린 클라이언트. roster, speaker, force release 같은
+		// 제어 메시지를 조용히 버리면 클라이언트 상태가 어긋난 채 남는다.
+		// 메시지를 버리는 대신 연결을 종료해 재접속·재동기화를 유도한다.
+		log.Printf("[송신] %s 송신 버퍼 포화 — 연결 종료로 재동기화 유도", c.conn.RemoteAddr())
+		c.close()
 	}
 }
 
@@ -89,16 +100,20 @@ func (c *Client) readPump() {
 	}
 	var m Msg
 	if err := json.Unmarshal(data, &m); err != nil || m.Type != "auth" {
+		c.hub.authLimit.recordFailure(c.conn.RemoteAddr().String())
 		c.sendMsg(Msg{Type: "auth_fail", Reason: "first message must be auth"})
 		return
 	}
 	if m.Token != c.hub.token {
+		c.hub.authLimit.recordFailure(c.conn.RemoteAddr().String())
 		c.sendMsg(Msg{Type: "auth_fail", Reason: "invalid token"})
 		log.Printf("[인증 실패] %s (닉네임: %q)", c.conn.RemoteAddr(), m.Nick)
 		// 실패 메시지가 전송될 시간을 잠깐 준다.
 		time.Sleep(200 * time.Millisecond)
 		return
 	}
+	// 인증 성공 — 해당 host의 실패 기록을 초기화한다.
+	c.hub.authLimit.recordSuccess(c.conn.RemoteAddr().String())
 	c.nick = m.Nick
 	if c.nick == "" {
 		c.nick = "이름없음"
