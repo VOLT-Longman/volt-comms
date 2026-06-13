@@ -11,8 +11,44 @@ public partial class App : System.Windows.Application
     private Forms.NotifyIcon? _tray;
     private MainWindow? _main;
 
+    // 중복 실행 방지(단일 인스턴스). Local\ 접두사로 현재 로그인 세션 단위로 막는다.
+    private const string InstanceMutexName = @"Local\VoltComms.SingleInstance.A3F1";
+    private const string ShowEventName = @"Local\VoltComms.ShowExisting.A3F1";
+    private Mutex? _instanceMutex;
+    private EventWaitHandle? _showEvent;
+    private RegisteredWaitHandle? _showWait;
+
     private void OnAppStartup(object sender, StartupEventArgs e)
     {
+        // 이미 다른 인스턴스가 실행 중이면, 그쪽 창을 띄우라고 신호한 뒤 조용히 종료한다.
+        _instanceMutex = new Mutex(initiallyOwned: true, InstanceMutexName, out bool isFirst);
+        if (!isFirst)
+        {
+            try
+            {
+                if (EventWaitHandle.TryOpenExisting(ShowEventName, out var existing))
+                    using (existing) existing.Set();
+            }
+            catch
+            {
+                // 신호 실패해도 중복 실행만 막으면 되므로 그대로 종료한다.
+            }
+            _instanceMutex.Dispose();
+            _instanceMutex = null;
+            Shutdown();
+            return;
+        }
+
+        // 첫 인스턴스: 이후 다른 인스턴스가 보내는 '창 띄우기' 신호를 대기한다.
+        _showEvent = new EventWaitHandle(false, EventResetMode.AutoReset, ShowEventName);
+        _showWait = ThreadPool.RegisterWaitForSingleObject(
+            _showEvent,
+            (_, _) => Dispatcher.BeginInvoke((Action)(() =>
+            {
+                if (_main != null) RestoreWindow(_main);
+            })),
+            null, Timeout.Infinite, executeOnlyOnce: false);
+
         _log = new Logger();
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
             _log.Info($"[치명적 오류] {args.ExceptionObject}");
@@ -107,6 +143,10 @@ public partial class App : System.Windows.Application
             _tray.Visible = false;
             _tray.Dispose();
         }
+        // 단일 인스턴스 자원 정리.
+        _showWait?.Unregister(null);
+        _showEvent?.Dispose();
+        _instanceMutex?.Dispose();
         _log?.Info("=== VOLT 무전기 종료 ===");
     }
 }
