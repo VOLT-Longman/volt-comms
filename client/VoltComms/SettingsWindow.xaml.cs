@@ -43,7 +43,11 @@ public partial class SettingsWindow : Window
         FillDeviceCombo(OutputCombo, AudioEngine.OutputDeviceNames(), _cfg.OutputDevice);
 
         VolumeSlider.Value = _cfg.OutputVolume;
+        MicGainSlider.Value = _cfg.MicGain;
+        MicGainLabel.Text = $"{_cfg.MicGain}%";
         GrantBeepCheck.IsChecked = _cfg.GrantBeep;
+        RogerBeepCheck.IsChecked = _cfg.RogerBeep;
+        CloseToTrayCheck.IsChecked = _cfg.CloseToTray;
         TopmostCheck.IsChecked = _cfg.AlwaysOnTop;
         MinimizedCheck.IsChecked = _cfg.StartMinimized;
 
@@ -107,6 +111,13 @@ public partial class SettingsWindow : Window
         _main.PreviewVolume((int)e.NewValue); // 즉시 들리는 음량으로 반영
     }
 
+    private void OnMicGainChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MicGainLabel == null) return; // 초기화 전
+        MicGainLabel.Text = $"{(int)e.NewValue}%";
+        _main.PreviewMicGain((int)e.NewValue); // 즉시 증폭 반영
+    }
+
     // ---------- 저장/취소 ----------
 
     private void OnSaveClick(object sender, RoutedEventArgs e)
@@ -129,7 +140,10 @@ public partial class SettingsWindow : Window
         _cfg.InputDevice = SelectedDevice(InputCombo);
         _cfg.OutputDevice = SelectedDevice(OutputCombo);
         _cfg.OutputVolume = (int)VolumeSlider.Value;
+        _cfg.MicGain = (int)MicGainSlider.Value;
         _cfg.GrantBeep = GrantBeepCheck.IsChecked == true;
+        _cfg.RogerBeep = RogerBeepCheck.IsChecked == true;
+        _cfg.CloseToTray = CloseToTrayCheck.IsChecked == true;
         _cfg.AlwaysOnTop = TopmostCheck.IsChecked == true;
         _cfg.StartMinimized = MinimizedCheck.IsChecked == true;
 
@@ -166,5 +180,6 @@ public partial class SettingsWindow : Window
         _capture = null;
         _main.SuspendPtt(false);
         _main.PreviewVolume(_cfg.OutputVolume); // 취소 시 원래 음량 복원
+        _main.PreviewMicGain(_cfg.MicGain);     // 취소 시 원래 증폭 복원
     }
 }

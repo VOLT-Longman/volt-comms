@@ -28,6 +28,8 @@
         <DockPanel Grid.Row="0">
             <Button DockPanel.Dock="Right" Content="설정" Style="{StaticResource VoltButton}"
                     Padding="10,3" VerticalAlignment="Center" Click="OnOpenSettings"/>
+            <Button x:Name="CallBtn" DockPanel.Dock="Right" Content="통화 시작" Style="{StaticResource VoltButton}"
+                    Padding="10,3" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" Click="OnToggleCall"/>
             <StackPanel Orientation="Horizontal">
                 <Image Source="/Assets/VOLT_logo.png" Width="34" Height="34"
                        VerticalAlignment="Center" SnapsToDevicePixels="True"
@@ -64,8 +66,14 @@
                 <ItemsControl x:Name="RosterList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" Margin="2,4">
-                                <Ellipse Width="9" Height="9" VerticalAlignment="Center">
+                            <Grid Margin="2,3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="74"/>
+                                    <ColumnDefinition Width="34"/>
+                                </Grid.ColumnDefinitions>
+                                <Ellipse Grid.Column="0" Width="9" Height="9" VerticalAlignment="Center">
                                     <Ellipse.Style>
                                         <Style TargetType="Ellipse">
                                             <Setter Property="Fill" Value="#FF48484A"/>
@@ -77,9 +85,16 @@
                                         </Style>
                                     </Ellipse.Style>
                                 </Ellipse>
-                                <TextBlock Text="{Binding Nick}" Foreground="{StaticResource FgMain}"
-                                           FontSize="13" Margin="9,0,0,0" VerticalAlignment="Center"/>
-                            </StackPanel>
+                                <TextBlock Grid.Column="1" Text="{Binding Nick}" Foreground="{StaticResource FgMain}"
+                                           FontSize="13" Margin="9,0,6,0" VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <Slider Grid.Column="2" Minimum="0" Maximum="200" SmallChange="5" LargeChange="20"
+                                        Value="{Binding Volume, Mode=TwoWay}" VerticalAlignment="Center"
+                                        ToolTip="이 사람 수신 음량 (0~200%)"/>
+                                <TextBlock Grid.Column="3" Text="{Binding Volume, StringFormat={}{0}%}"
+                                           Foreground="{StaticResource FgFaint}" FontSize="10.5"
+                                           VerticalAlignment="Center" TextAlignment="Right"/>
+                            </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

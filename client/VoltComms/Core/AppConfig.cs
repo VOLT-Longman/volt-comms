@@ -34,6 +34,18 @@ public class AppConfig
     /// <summary>발언권 획득 시 짧은 확인음 재생 여부.</summary>
     [JsonPropertyName("grant_beep")] public bool GrantBeep { get; set; } = true;
 
+    /// <summary>다른 사람이 발언을 시작/종료할 때 전원 공통 효과음 재생 여부.</summary>
+    [JsonPropertyName("roger_beep")] public bool RogerBeep { get; set; } = true;
+
+    /// <summary>닫기(X) 버튼을 누르면 종료하지 않고 트레이로 최소화할지 여부.</summary>
+    [JsonPropertyName("close_to_tray")] public bool CloseToTray { get; set; } = true;
+
+    /// <summary>내 마이크 증폭 (100=원본, 최대 300%).</summary>
+    [JsonPropertyName("mic_gain")] public int MicGain { get; set; } = 100;
+
+    /// <summary>접속자별 수신 음량 (닉네임 → 0~200%, 없으면 100).</summary>
+    [JsonPropertyName("user_volumes")] public Dictionary<string, int> UserVolumes { get; set; } = new();
+
     [JsonPropertyName("always_on_top")] public bool AlwaysOnTop { get; set; } = true;
 
     /// <summary>수신 음량 (0~100).</summary>

@@ -38,6 +38,15 @@ public sealed class AudioEngine : IDisposable
     /// <summary>마이크 입력 레벨 0.0~1.0 (설정 화면 레벨 미터용, 항상 갱신).</summary>
     public float MicLevel { get; private set; }
 
+    /// <summary>내 마이크 증폭 배수 (1.0 = 100%). SetMicGain 으로 변경.</summary>
+    private float _micGain = 1f;
+
+    /// <summary>현재 발언자별 수신 재생 게인 (1.0 = 100%). MainWindow 가 발언자 전환 시 설정.</summary>
+    public float PlaybackGain = 1f;
+
+    /// <summary>마이크 증폭(%) 설정. 10~300% 로 제한.</summary>
+    public void SetMicGain(int percent) => _micGain = Math.Clamp(percent, 10, 300) / 100f;
+
     /// <summary>인코딩된 20ms Opus 프레임 — 오디오 스레드에서 호출됨.</summary>
     public event Action<byte[], int>? EncodedFrame;
 
@@ -80,26 +89,21 @@ public sealed class AudioEngine : IDisposable
     private void OnMicData(object? sender, WaveInEventArgs e)
     {
         int sampleCount = e.BytesRecorded / 2;
+        float gain = _micGain;       // 증폭은 미터/송신 양쪽에 동일 적용 (클리핑 확인용)
+        bool tx = Transmitting;
 
         // 레벨 미터는 송신 여부와 무관하게 항상 갱신한다 (피크 + 감쇠).
+        // 송신 중이면 같은 패스에서 증폭된 샘플을 20ms(960샘플) 프레임으로 모아 인코딩한다.
         int peak = 0;
         for (int i = 0; i < sampleCount; i++)
         {
-            int s = Math.Abs((short)(e.Buffer[i * 2] | (e.Buffer[i * 2 + 1] << 8)));
-            if (s > peak) peak = s;
-        }
-        float level = peak / 32768f;
-        MicLevel = Math.Max(level, MicLevel * 0.85f);
+            int raw = (short)(e.Buffer[i * 2] | (e.Buffer[i * 2 + 1] << 8));
+            short sample = (short)Math.Clamp((int)(raw * gain), short.MinValue, short.MaxValue);
+            int abs = Math.Abs((int)sample);
+            if (abs > peak) peak = abs;
 
-        if (!Transmitting)
-        {
-            _frameFill = 0; // 송신 중이 아니면 버린다.
-            return;
-        }
-        // 16비트 샘플을 20ms(960샘플) 프레임으로 모아 인코딩한다.
-        for (int i = 0; i < sampleCount; i++)
-        {
-            _frame[_frameFill++] = (short)(e.Buffer[i * 2] | (e.Buffer[i * 2 + 1] << 8));
+            if (!tx) continue;
+            _frame[_frameFill++] = sample;
             if (_frameFill < FrameSamples) continue;
             _frameFill = 0;
             try
@@ -112,6 +116,10 @@ public sealed class AudioEngine : IDisposable
                 _log.Info($"[오디오] 인코딩 오류: {ex.Message}");
             }
         }
+        if (!tx) _frameFill = 0; // 송신 중이 아니면 남은 부분 버린다.
+
+        float level = peak / 32768f;
+        MicLevel = Math.Max(level, MicLevel * 0.85f);
     }
 
     /// <summary>수신 Opus 프레임을 디코딩해 재생 버퍼에 넣는다.</summary>
@@ -129,10 +137,14 @@ public sealed class AudioEngine : IDisposable
             }
             int samples = _decoder.Decode(opus, _decBuf, MaxDecodedSamples, false);
             if (samples <= 0) return;
+            float gain = PlaybackGain; // 현재 발언자의 유저별 음량
             for (int i = 0; i < samples; i++)
             {
-                _decBytes[i * 2] = (byte)_decBuf[i];
-                _decBytes[i * 2 + 1] = (byte)(_decBuf[i] >> 8);
+                short s = gain == 1f
+                    ? _decBuf[i]
+                    : (short)Math.Clamp((int)(_decBuf[i] * gain), short.MinValue, short.MaxValue);
+                _decBytes[i * 2] = (byte)s;
+                _decBytes[i * 2 + 1] = (byte)(s >> 8);
             }
             playBuf.AddSamples(_decBytes, 0, samples * 2);
         }
@@ -151,6 +163,12 @@ public sealed class AudioEngine : IDisposable
 
     /// <summary>발언권 획득 시: 짧은 확인음.</summary>
     public void GrantBeep() => AddTone(880, 70);
+
+    /// <summary>누군가 발언을 시작할 때: 전원 공통, 짧고 높은 알림음.</summary>
+    public void RogerStartBeep() => AddTone(1175, 60);
+
+    /// <summary>누군가 발언을 종료할 때: 전원 공통, 짧고 낮은 알림음 (시작음과 구분).</summary>
+    public void RogerEndBeep() => AddTone(590, 85);
 
     /// <summary>수신 음량 0~100%.</summary>
     public void SetVolume(int percent)

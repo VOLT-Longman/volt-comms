@@ -75,12 +75,21 @@
                         VerticalAlignment="Center" ValueChanged="OnVolumeChanged"/>
             </DockPanel>
         </Grid>
-        <TextBlock Text="장치 변경은 저장 시 적용됩니다. 입력 레벨은 현재 사용 중인 마이크 기준입니다."
+        <DockPanel Margin="0,8,0,0">
+            <TextBlock Text="마이크 증폭" Style="{StaticResource FieldLabel}" Width="70"/>
+            <TextBlock x:Name="MicGainLabel" DockPanel.Dock="Right" Width="46" TextAlignment="Right"
+                       Foreground="{StaticResource FgDim}" FontSize="12" VerticalAlignment="Center"/>
+            <Slider x:Name="MicGainSlider" Minimum="100" Maximum="300" TickFrequency="10" IsSnapToTickEnabled="True"
+                    VerticalAlignment="Center" ValueChanged="OnMicGainChanged"/>
+        </DockPanel>
+        <TextBlock Text="장치 변경은 저장 시 적용됩니다. 마이크가 작게 들리면 증폭을 올리세요(과하면 찢어짐)."
                    Foreground="{StaticResource FgFaint}" FontSize="11" Margin="2,4,0,0"/>
 
         <TextBlock Text="기타" Style="{StaticResource SectionTitle}"/>
         <StackPanel>
-            <CheckBox x:Name="GrantBeepCheck" Content="발언권을 얻으면 확인음 재생" Style="{StaticResource VoltCheckBox}" Margin="0,2"/>
+            <CheckBox x:Name="GrantBeepCheck" Content="발언권을 얻으면 확인음 재생 (나만)" Style="{StaticResource VoltCheckBox}" Margin="0,2"/>
+            <CheckBox x:Name="RogerBeepCheck" Content="다른 사람이 발언을 시작/종료할 때 효과음 (전원 공통)" Style="{StaticResource VoltCheckBox}" Margin="0,2"/>
+            <CheckBox x:Name="CloseToTrayCheck" Content="닫기(X) 버튼을 누르면 트레이로 최소화 (해제 시 종료)" Style="{StaticResource VoltCheckBox}" Margin="0,2"/>
             <CheckBox x:Name="TopmostCheck" Content="창을 항상 위에 표시" Style="{StaticResource VoltCheckBox}" Margin="0,2"/>
             <CheckBox x:Name="MinimizedCheck" Content="시작 시 창을 숨기고 트레이로 실행" Style="{StaticResource VoltCheckBox}" Margin="0,2"/>
         </StackPanel>
