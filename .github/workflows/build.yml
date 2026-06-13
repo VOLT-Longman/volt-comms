@@ -75,6 +75,10 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
+          # 하이픈이 든 태그(v0.2.0-alpha.1 등)는 사전 릴리스로 표시해
+          # 정식 'Latest release' 자리를 차지하지 않게 한다.
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
           files: |
             artifacts/volt-server-linux-amd64/volt-server
             artifacts/VoltComms-win-x64/VoltComms.exe
