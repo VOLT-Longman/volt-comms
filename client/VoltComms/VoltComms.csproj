@@ -11,6 +11,8 @@
     <AssemblyName>VoltComms</AssemblyName>
     <RootNamespace>VoltComms</RootNamespace>
     <Version>0.2.0</Version>
+    <!-- 탐색기/작업표시줄에 표시되는 exe 파일 아이콘 (VOLT 날개 로고) -->
+    <ApplicationIcon>Assets\VOLT.ico</ApplicationIcon>
     <!-- 리눅스 CI/개발 환경에서도 컴파일 검증이 가능하도록 허용 -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <!-- 단일 exe 배포: 자세한 옵션은 .github/workflows/build.yml 의 dotnet publish 참조 -->
@@ -20,6 +22,16 @@
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="Concentus" Version="2.2.2" />
+  </ItemGroup>
+
+  <!-- 브랜드 자산: 날개 로고 + Pretendard 폰트 (앱에 내장 배포) -->
+  <ItemGroup>
+    <Resource Include="Assets\VOLT_logo.png" />
+    <Resource Include="Assets\VOLT.ico" />
+    <Resource Include="Fonts\Pretendard-Regular.otf" />
+    <Resource Include="Fonts\Pretendard-Medium.otf" />
+    <Resource Include="Fonts\Pretendard-SemiBold.otf" />
+    <Resource Include="Fonts\Pretendard-Bold.otf" />
   </ItemGroup>
 
 </Project>

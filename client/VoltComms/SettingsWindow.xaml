@@ -6,6 +6,10 @@
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource BgWindow}"
+        FontFamily="{StaticResource AppFont}"
+        Icon="/Assets/VOLT.ico"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="ClearType"
         Loaded="OnLoaded" Closed="OnClosedWindow">
     <StackPanel Margin="20,8,20,16">
 

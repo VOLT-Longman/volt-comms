@@ -5,23 +5,29 @@
              Startup="OnAppStartup"
              Exit="OnAppExit">
     <Application.Resources>
-        <!-- 공용 다크 테마 팔레트 -->
-        <SolidColorBrush x:Key="BgWindow" Color="#FF11151A"/>
-        <SolidColorBrush x:Key="BgPanel" Color="#FF1A222C"/>
-        <SolidColorBrush x:Key="BgControl" Color="#FF222C38"/>
-        <SolidColorBrush x:Key="FgMain" Color="#FFD7E1EA"/>
-        <SolidColorBrush x:Key="FgDim" Color="#FF8A97A4"/>
-        <SolidColorBrush x:Key="FgFaint" Color="#FF5E6A76"/>
-        <SolidColorBrush x:Key="Accent" Color="#FFE8B931"/>
-        <SolidColorBrush x:Key="Ok" Color="#FF4CC96E"/>
-        <SolidColorBrush x:Key="Bad" Color="#FFFF5A5A"/>
-        <SolidColorBrush x:Key="BorderDim" Color="#FF313D4B"/>
+        <!-- 브랜드 폰트: Pretendard (앱에 내장). 누락 시 시스템 폰트로 폴백. -->
+        <FontFamily x:Key="AppFont">pack://application:,,,/Fonts/#Pretendard</FontFamily>
+
+        <!-- 공용 다크 테마 팔레트 — VOLT 웹사이트 디자인 토큰과 동기화
+             (순수 블랙 배경 + 오렌지 강조). 출처: volt-website css/styles.css :root -->
+        <SolidColorBrush x:Key="BgWindow" Color="#FF000000"/>   <!-- color-bg-primary -->
+        <SolidColorBrush x:Key="BgPanel" Color="#FF141414"/>    <!-- color-bg-card 위 카드 -->
+        <SolidColorBrush x:Key="BgControl" Color="#FF1C1C1E"/>  <!-- color-bg-card-hover -->
+        <SolidColorBrush x:Key="FgMain" Color="#FFF5F5F7"/>     <!-- color-text-primary -->
+        <SolidColorBrush x:Key="FgDim" Color="#FFA1A1A6"/>      <!-- color-text-secondary -->
+        <SolidColorBrush x:Key="FgFaint" Color="#FF86868B"/>    <!-- color-text-tertiary -->
+        <SolidColorBrush x:Key="Accent" Color="#FFE8482F"/>     <!-- volt-orange -->
+        <SolidColorBrush x:Key="AccentLight" Color="#FFFF5F44"/><!-- volt-orange-light -->
+        <SolidColorBrush x:Key="AccentDark" Color="#FFC13A24"/> <!-- volt-orange-dark -->
+        <SolidColorBrush x:Key="Ok" Color="#FF4CC96E"/>        <!-- 기능 색: 발언/접속 -->
+        <SolidColorBrush x:Key="Bad" Color="#FFFF5A5A"/>       <!-- 기능 색: 오류 -->
+        <SolidColorBrush x:Key="BorderDim" Color="#FF2A2A2C"/>  <!-- color-border -->
 
         <Style x:Key="VoltButton" TargetType="Button">
             <Setter Property="Foreground" Value="{StaticResource FgMain}"/>
             <Setter Property="Background" Value="{StaticResource BgControl}"/>
             <Setter Property="BorderBrush" Value="{StaticResource BorderDim}"/>
-            <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="Padding" Value="14,6"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
@@ -29,16 +35,16 @@
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Bd" Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
-                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                CornerRadius="8" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#FF2C3845"/>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#FF4A5868"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#FF2A2A2C"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#FF3D3D40"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#FF18202A"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#FF0E0E0E"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Foreground" Value="{StaticResource FgFaint}"/>
@@ -49,11 +55,38 @@
             </Setter>
         </Style>
 
-        <Style x:Key="VoltPrimaryButton" TargetType="Button" BasedOn="{StaticResource VoltButton}">
-            <Setter Property="Background" Value="#FF8A6D14"/>
-            <Setter Property="BorderBrush" Value="#FFB08C1F"/>
-            <Setter Property="Foreground" Value="#FFFFF4D6"/>
+        <!-- 오렌지 채움 강조 버튼. 자체 템플릿으로 hover 시 오렌지를 유지한다. -->
+        <Style x:Key="VoltPrimaryButton" TargetType="Button">
+            <Setter Property="Foreground" Value="#FFFFFFFF"/>
+            <Setter Property="Background" Value="{StaticResource Accent}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentDark}"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentLight}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentDark}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource BgControl}"/>
+                                <Setter Property="Foreground" Value="{StaticResource FgFaint}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="VoltTextBox" TargetType="TextBox">

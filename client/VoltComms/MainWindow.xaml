@@ -7,6 +7,10 @@
         ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgWindow}"
+        FontFamily="{StaticResource AppFont}"
+        Icon="/Assets/VOLT.ico"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="ClearType"
         Loaded="OnLoaded"
         Closing="OnWindowClosing">
     <Grid Margin="16,12,16,12">
@@ -23,10 +27,15 @@
         <!-- 헤더 -->
         <DockPanel Grid.Row="0">
             <Button DockPanel.Dock="Right" Content="설정" Style="{StaticResource VoltButton}"
-                    Padding="10,3" Click="OnOpenSettings"/>
-            <StackPanel>
-                <TextBlock Text="VOLT 지휘망" FontSize="15" FontWeight="Bold" Foreground="{StaticResource Accent}"/>
-                <TextBlock x:Name="ConnText" Text="● 시작 중…" FontSize="11" Foreground="{StaticResource FgDim}" Margin="0,2,0,0"/>
+                    Padding="10,3" VerticalAlignment="Center" Click="OnOpenSettings"/>
+            <StackPanel Orientation="Horizontal">
+                <Image Source="/Assets/VOLT_logo.png" Width="34" Height="34"
+                       VerticalAlignment="Center" SnapsToDevicePixels="True"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                <StackPanel VerticalAlignment="Center" Margin="9,0,0,0">
+                    <TextBlock Text="VOLT 지휘망" FontSize="15" FontWeight="Bold" Foreground="{StaticResource FgMain}"/>
+                    <TextBlock x:Name="ConnText" Text="● 시작 중…" FontSize="11" Foreground="{StaticResource FgDim}" Margin="0,2,0,0"/>
+                </StackPanel>
             </StackPanel>
         </DockPanel>
 
@@ -59,7 +68,7 @@
                                 <Ellipse Width="9" Height="9" VerticalAlignment="Center">
                                     <Ellipse.Style>
                                         <Style TargetType="Ellipse">
-                                            <Setter Property="Fill" Value="#FF3A4654"/>
+                                            <Setter Property="Fill" Value="#FF48484A"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsSpeaking}" Value="True">
                                                     <Setter Property="Fill" Value="#FF4CC96E"/>
