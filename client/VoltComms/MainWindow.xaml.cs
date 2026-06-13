@@ -492,7 +492,8 @@ public partial class MainWindow : Window
             return;
         }
         // 트레이로 최소화 옵션이 꺼져 있으면 앱 전체를 종료한다.
-        Application.Current.Shutdown();
+        // UseWindowsForms 로 Application 이 모호하므로 WPF 쪽으로 명시한다.
+        System.Windows.Application.Current.Shutdown();
     }
 
     protected override void OnClosed(EventArgs e)
