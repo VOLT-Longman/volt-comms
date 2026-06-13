@@ -108,7 +108,12 @@ func (h *Hub) grantPTT(c *Client) {
 	if h.holder == nil || h.holder == c {
 		alreadyMine := h.holder == c
 		h.holder = c
-		h.talkStart = time.Now()
+		if !alreadyMine {
+			// 새로 부여될 때만 발언 타이머를 시작한다. 이미 보유 중인데
+			// ptt_start 가 반복돼도 talkStart 를 리셋하지 않아야 30초
+			// 최대 발언 제한을 우회할 수 없다.
+			h.talkStart = time.Now()
+		}
 		h.mu.Unlock()
 		c.sendMsg(Msg{Type: "ptt_granted"})
 		if !alreadyMine {
