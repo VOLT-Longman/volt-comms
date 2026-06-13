@@ -14,7 +14,7 @@ on:
 
 jobs:
   server:
-    name: 서버 (Go, linux-amd64)
+    name: 서버 (Go, linux + windows)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,21 +24,28 @@ jobs:
           go-version-file: server/go.mod
           cache-dependency-path: server/go.sum
 
-      - name: 빌드
+      - name: 빌드 (리눅스 + 윈도우 크로스 컴파일)
         working-directory: server
         env:
           CGO_ENABLED: "0"
-          GOOS: linux
-          GOARCH: amd64
         run: |
           go vet ./...
-          go build -trimpath -ldflags "-s -w -X main.version=${GITHUB_SHA::8}" -o ../dist/volt-server .
+          LD="-s -w -X main.version=${GITHUB_SHA::8}"
+          GOOS=linux   GOARCH=amd64 go build -trimpath -ldflags "$LD" -o ../dist/volt-server .
+          GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "$LD" -o ../dist/volt-server.exe .
 
-      - name: 아티팩트 업로드
+      - name: 아티팩트 업로드 (리눅스)
         uses: actions/upload-artifact@v4
         with:
           name: volt-server-linux-amd64
           path: dist/volt-server
+          if-no-files-found: error
+
+      - name: 아티팩트 업로드 (윈도우)
+        uses: actions/upload-artifact@v4
+        with:
+          name: volt-server-windows-amd64
+          path: dist/volt-server.exe
           if-no-files-found: error
 
   client:
@@ -95,4 +102,5 @@ jobs:
           generate_release_notes: true
           files: |
             artifacts/volt-server-linux-amd64/volt-server
+            artifacts/volt-server-windows-amd64/volt-server.exe
             artifacts/VoltComms-win-x64/VoltComms.exe
