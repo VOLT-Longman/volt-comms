@@ -11,6 +11,10 @@ on:
         description: "릴리스로 게시할 태그 (예: v0.2.0-alpha.1). 비우면 빌드만 수행."
         required: false
         default: ""
+      release_notes:
+        description: "릴리스 노트 본문 (비우면 자동 생성 노트만 사용)."
+        required: false
+        default: ""
 
 jobs:
   server:
@@ -104,6 +108,9 @@ jobs:
         with:
           tag_name: ${{ env.REL_TAG }}
           target_commitish: ${{ github.sha }}
+          # 수동 실행에서 release_notes 를 주면 그 본문을 쓰고, 아래
+          # generate_release_notes 가 커밋/PR 목록을 뒤에 덧붙인다.
+          body: ${{ inputs.release_notes }}
           # 하이픈이 든 태그(v0.2.0-alpha.1 등)는 사전 릴리스로 표시해
           # 정식 'Latest release' 자리를 차지하지 않게 한다.
           prerelease: ${{ contains(env.REL_TAG, '-') }}
